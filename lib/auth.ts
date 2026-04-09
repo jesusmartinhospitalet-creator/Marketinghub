@@ -1,24 +1,35 @@
-// Authentication utilities
-// Full implementation will be added in the auth module phase.
-// Planned: email/password + optional Google OAuth (restricted domain).
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 
 export type AuthSession = {
   userId: string
   email: string
-  role: 'admin' | 'member'
+  name: string
+  role: string
 }
 
-/** Returns the current session. Returns null if not authenticated. */
+/**
+ * Returns the current session for use in Server Components and Route Handlers.
+ * Returns null if the user is not authenticated.
+ */
 export async function getSession(): Promise<AuthSession | null> {
-  // TODO: implement session retrieval (JWT / cookie-based)
-  return null
+  const session = await auth()
+  if (!session?.user?.id) return null
+
+  return {
+    userId: session.user.id,
+    email: session.user.email ?? '',
+    name: session.user.name ?? '',
+    role: session.user.role,
+  }
 }
 
-/** Checks if the current request is authenticated. */
+/**
+ * Requires a valid session. Redirects to /login if not authenticated.
+ * Use this in protected Server Components and Route Handlers.
+ */
 export async function requireAuth(): Promise<AuthSession> {
   const session = await getSession()
-  if (!session) {
-    throw new Error('Unauthorized')
-  }
+  if (!session) redirect('/login')
   return session
 }

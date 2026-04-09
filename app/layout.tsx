@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AuthProvider } from './_providers/AuthProvider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -9,14 +10,12 @@ export const metadata: Metadata = {
   description: 'Plataforma interna de gestión de tareas y clientes de marketing.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   )
 }

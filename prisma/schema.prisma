@@ -1,8 +1,5 @@
 // Ligrow Tasks – Prisma Schema
 // MySQL via Prisma ORM
-//
-// Migration phases:
-//   init → User, Client, Task, Comment, Attachment, MonthlyTemplate, ClientMonth, AiLog
 
 generator client {
   provider = "prisma-client-js"
@@ -52,23 +49,55 @@ enum AiActionType {
 }
 
 // ─────────────────────────────────────────────
-// Models
+// Auth models
 // ─────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  role          Role      @default(MEMBER)
+  // Credentials auth – null for OAuth-only users
+  passwordHash  String?
+  // OAuth support fields (NextAuth compatible)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
 
   // Relations
+  accounts          Account[]
   tasks             Task[]            @relation("TaskOwner")
   comments          Comment[]
   templateOwnership MonthlyTemplate[] @relation("TemplateDefaultOwner")
 
   @@map("users")
 }
+
+// Stores OAuth provider tokens – used when Google login is activated
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+// ─────────────────────────────────────────────
+// Business models
+// ─────────────────────────────────────────────
 
 model Client {
   id          String    @id @default(cuid())
@@ -80,7 +109,6 @@ model Client {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Relations
   tasks     Task[]
   months    ClientMonth[]
   templates MonthlyTemplate[]
@@ -103,7 +131,6 @@ model Task {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
-  // Relations
   owner       User?        @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
   month       ClientMonth? @relation(fields: [monthId], references: [id], onDelete: SetNull)
@@ -125,7 +152,6 @@ model Comment {
   content   String   @db.Text
   createdAt DateTime @default(now())
 
-  // Relations
   task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -140,7 +166,6 @@ model Attachment {
   url       String
   createdAt DateTime @default(now())
 
-  // Relations
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
@@ -156,7 +181,6 @@ model MonthlyTemplate {
   defaultPriority TaskPriority @default(MEDIUM)
   dayOfMonth      Int
 
-  // Relations
   client       Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   defaultOwner User?  @relation("TemplateDefaultOwner", fields: [defaultOwnerId], references: [id], onDelete: SetNull)
 
@@ -171,11 +195,9 @@ model ClientMonth {
   month    Int
   status   MonthStatus @default(OPEN)
 
-  // Relations
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   tasks  Task[]
 
-  // One month per client per year/month
   @@unique([clientId, year, month])
   @@index([clientId])
   @@map("client_months")
