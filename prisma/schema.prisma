@@ -1,13 +1,8 @@
 // Ligrow Tasks – Prisma Schema
-// Models will be added progressively in each feature phase.
+// MySQL via Prisma ORM
 //
-// Phase plan:
-//   1. auth    → User, Session
-//   2. clients → Client
-//   3. tasks   → Task, Comment, Attachment
-//   4. months  → Month, Template
-//   5. ai      → AiLog
-//   6. notifs  → Notification
+// Migration phases:
+//   init → User, Client, Task, Comment, Attachment, MonthlyTemplate, ClientMonth, AiLog
 
 generator client {
   provider = "prisma-client-js"
@@ -16,4 +11,184 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MonthStatus {
+  OPEN
+  CLOSED
+}
+
+enum AiActionType {
+  CREATE_TASK
+  EDIT_TASK
+  DELETE_TASK
+  CREATE_CLIENT
+  SUMMARY
+  SUGGESTION
+  OTHER
+}
+
+// ─────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  // Relations
+  tasks             Task[]            @relation("TaskOwner")
+  comments          Comment[]
+  templateOwnership MonthlyTemplate[] @relation("TemplateDefaultOwner")
+
+  @@map("users")
+}
+
+model Client {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique
+  description String?   @db.Text
+  startDate   DateTime?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  tasks     Task[]
+  months    ClientMonth[]
+  templates MonthlyTemplate[]
+
+  @@map("clients")
+}
+
+model Task {
+  id                 String       @id @default(cuid())
+  title              String
+  description        String?      @db.Text
+  status             TaskStatus   @default(PENDING)
+  priority           TaskPriority @default(MEDIUM)
+  startDate          DateTime?
+  dueDate            DateTime?
+  ownerId            String?
+  clientId           String
+  isMonthlyRecurring Boolean      @default(false)
+  monthId            String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  // Relations
+  owner       User?        @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  month       ClientMonth? @relation(fields: [monthId], references: [id], onDelete: SetNull)
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@index([clientId])
+  @@index([ownerId])
+  @@index([monthId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("comments")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  filename  String
+  url       String
+  createdAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("attachments")
+}
+
+model MonthlyTemplate {
+  id              String       @id @default(cuid())
+  clientId        String
+  title           String
+  description     String?      @db.Text
+  defaultOwnerId  String?
+  defaultPriority TaskPriority @default(MEDIUM)
+  dayOfMonth      Int
+
+  // Relations
+  client       Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  defaultOwner User?  @relation("TemplateDefaultOwner", fields: [defaultOwnerId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@map("monthly_templates")
+}
+
+model ClientMonth {
+  id       String      @id @default(cuid())
+  clientId String
+  year     Int
+  month    Int
+  status   MonthStatus @default(OPEN)
+
+  // Relations
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+
+  // One month per client per year/month
+  @@unique([clientId, year, month])
+  @@index([clientId])
+  @@map("client_months")
+}
+
+model AiLog {
+  id         String       @id @default(cuid())
+  actionType AiActionType
+  payload    Json
+  result     Json?
+  createdAt  DateTime     @default(now())
+
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("ai_logs")
 }
