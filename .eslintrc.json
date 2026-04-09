@@ -1,0 +1,7 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    // Disable legacy Pages Router font rule – we use App Router
+    "@next/next/no-page-custom-font": "off"
+  }
+}
