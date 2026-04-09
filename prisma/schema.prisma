@@ -102,7 +102,7 @@ model Account {
 model Client {
   id          String    @id @default(cuid())
   name        String
-  code        String    @unique
+  code        String?   @unique
   description String?   @db.Text
   startDate   DateTime?
   notes       String?   @db.Text

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { ClientActions } from '@/components/clients/ClientActions'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -80,6 +81,16 @@ export default async function ClientPage({ params }: Props) {
 
   if (!client) notFound()
 
+  // Serialize Date → string for client component boundary
+  const serializedClient = {
+    id:          client.id,
+    name:        client.name,
+    code:        client.code,
+    description: client.description,
+    notes:       client.notes,
+    startDate:   client.startDate ? client.startDate.toISOString().slice(0, 10) : null,
+  }
+
   return (
     <div>
       {/* ── Client header card ──────────────────────────────────────── */}
@@ -103,9 +114,7 @@ export default async function ClientPage({ params }: Props) {
             )}
           </div>
 
-          <button className="btn text-[12px] py-1.5 px-3">
-            ✏️ Editar ficha
-          </button>
+          <ClientActions client={serializedClient} />
         </div>
 
         {/* Meta chips */}

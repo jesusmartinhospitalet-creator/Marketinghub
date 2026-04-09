@@ -11,12 +11,15 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const session = await auth()
   if (!session?.user) redirect('/login')
 
-  // Fetch clients with pending task count for sidebar badges
+  // Fetch clients with full data for sidebar (edit modal needs description/notes/startDate)
   const clients = await prisma.client.findMany({
     select: {
       id: true,
       name: true,
       code: true,
+      description: true,
+      notes: true,
+      startDate: true,
       tasks: {
         where: { status: { not: 'DONE' } },
         select: { id: true },
@@ -29,6 +32,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
     id:           c.id,
     name:         c.name,
     code:         c.code,
+    description:  c.description,
+    notes:        c.notes,
+    startDate:    c.startDate ? c.startDate.toISOString().slice(0, 10) : null,
     pendingTasks: c.tasks.length,
   }))
 
