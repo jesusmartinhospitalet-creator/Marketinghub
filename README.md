@@ -1,208 +1,160 @@
 # Ligrow Tasks
 
-Ligrow Tasks es una aplicación web interna para la gestión integral de clientes, tareas operativas y planificación mensual.
+Plataforma interna de gestión de tareas y clientes de marketing.
 
-El objetivo es disponer de un dashboard visual, claro y potente que permita al equipo gestionar el trabajo diario, detectar prioridades, organizar tareas recurrentes y mantener una visión global del estado de cada cliente.
+## Stack
 
-La aplicación incluye:
-
-- gestión completa de clientes
-- gestión completa de tareas
-- planificación mensual recurrente
-- dashboard operativo
-- vista tabla
-- vista kanban
-- vista gantt
-- comentarios internos
-- adjuntos
-- recordatorios automáticos
-- asistente IA integrado
-- arquitectura preparada para crecimiento
+- **Next.js 14** – App Router + TypeScript
+- **React 18**
+- **Tailwind CSS 3**
+- **Prisma ORM** – MySQL
+- **Node.js** – compatible con Hostinger
 
 ---
 
-# Stack tecnológico
+## Estructura del proyecto
 
-La aplicación se construye sobre un stack moderno y profesional:
-
-- Node.js
-- Next.js
-- MySQL
-- Prisma ORM
-- Autenticación con email/password
-- Opción de login con Google (restringido)
-- API de Anthropic para asistente IA
-
----
-
-# Estructura general del proyecto
-
-El proyecto sigue una arquitectura full-stack basada en Next.js.
-
-Ejemplo orientativo:
-
-/app
-/components
-/lib
-/prisma
-/public
-/styles
-/services
+```
+/app                    → Páginas y layouts (Next.js App Router)
+/components             → Componentes compartidos (UI genérica)
+/lib                    → Utilidades, cliente Prisma, helpers de auth y API
+/services               → Integraciones externas (Anthropic, email, storage)
 /modules
-  /auth
-  /clients
-  /tasks
-  /comments
-  /attachments
-  /templates
-  /months
-  /ai
-  /notifications
+  /auth                 → Autenticación y sesiones
+  /clients              → Gestión de clientes
+  /tasks                → Gestión de tareas
+  /comments             → Comentarios internos por tarea
+  /templates            → Plantillas de tareas recurrentes
+  /months               → Planificación mensual
+  /ai                   → Asistente IA (Anthropic Claude)
+  /notifications        → Alertas y recordatorios
+/prisma                 → Schema y migraciones de base de datos
+/public                 → Assets estáticos
+```
 
 ---
 
-# Funcionalidades principales
+## Setup local
 
-## Clientes
+### 1. Clonar e instalar dependencias
 
-- alta
-- edición
-- eliminación con confirmación
-- ficha completa
-- resumen ejecutivo
-- enlaces clave
-- notas internas
-
-## Tareas
-
-- crear
-- editar
-- eliminar
-- cambiar estado
-- cambiar prioridad
-- asignar responsable
-- comentarios
-- adjuntos
-
-## Dashboard
-
-- tareas urgentes
-- tareas activas
-- tareas completadas
-- tareas vencidas
-- tareas próximas a vencer
-- carga por persona
-- carga por cliente
-
-## Vistas
-
-- general
-- lista
-- kanban
-- gantt
-- resumen ejecutivo
-
-## Planificación mensual
-
-- plantillas por cliente
-- generación automática de meses
-- generación manual de meses
-- cierre de mes
-- reapertura de mes
-
-## IA integrada
-
-- lectura del contexto del dashboard
-- creación de tareas
-- edición de tareas
-- eliminación con confirmación
-- creación de clientes
-- resúmenes operativos
-- sugerencias de planificación
-
-## Recordatorios
-
-- tareas que vencen en 24 horas
-- tareas que vencen en 72 horas
-- tareas que vencen esta semana
-- tareas vencidas
-
----
-
-# Variables de entorno
-
-Ejemplo:
-
-DATABASE_URL=
-
-ANTHROPIC_API_KEY=
-
-AUTH_SECRET=
-
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-EMAIL_SERVER_HOST=
-EMAIL_SERVER_PORT=
-EMAIL_SERVER_USER=
-EMAIL_SERVER_PASSWORD=
-
-NEXT_PUBLIC_APP_URL=
-
----
-
-# Setup local
-
-Instalar dependencias:
-
+```bash
+git clone <repo-url>
+cd Marketinghub
 npm install
+```
 
-Configurar variables de entorno:
+### 2. Configurar variables de entorno
 
+```bash
 cp .env.example .env
+```
 
-Ejecutar migraciones:
+Edita `.env` con tus valores:
 
-npx prisma migrate dev
+```env
+DATABASE_URL=mysql://user:password@localhost:3306/ligrow_tasks
+ANTHROPIC_API_KEY=sk-ant-...
+AUTH_SECRET=una-clave-secreta-larga-y-aleatoria
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-Ejecutar servidor:
+### 3. Inicializar la base de datos
 
+> Requiere MySQL corriendo y la base de datos creada.
+
+```bash
+# Cuando los modelos estén definidos:
+npx prisma migrate dev --name init
+
+# O push directo (sin historial de migraciones):
+npm run db:push
+
+# Generar el cliente Prisma:
+npm run db:generate
+```
+
+### 4. Arrancar en desarrollo
+
+```bash
 npm run dev
+```
+
+La aplicación estará en [http://localhost:3000](http://localhost:3000).
 
 ---
 
-# Despliegue
+## Scripts disponibles
 
-El proyecto está preparado para desplegarse en un entorno Node.js profesional desde GitHub.
-
-Pasos generales:
-
-1. conectar repositorio
-2. configurar variables de entorno
-3. configurar base de datos MySQL
-4. ejecutar migraciones
-5. iniciar aplicación
-
----
-
-# Estado del proyecto
-
-Este proyecto está siendo reconstruido desde una versión inicial basada en:
-
-- Google Apps Script
-- HTML manual
-- Google Sheets como base de datos
-
-El objetivo es convertirlo en una aplicación robusta y escalable.
+| Script | Descripción |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm start` | Iniciar en producción |
+| `npm run lint` | Linting de código |
+| `npm run db:generate` | Generar cliente Prisma |
+| `npm run db:push` | Sincronizar schema con DB (sin migraciones) |
+| `npm run db:migrate` | Ejecutar migraciones en desarrollo |
+| `npm run db:studio` | Prisma Studio (GUI de base de datos) |
 
 ---
 
-# Principios clave
+## Despliegue en Hostinger (Node.js)
 
-- persistencia real de datos
-- claridad visual
-- rapidez operativa
-- facilidad de uso diaria
-- arquitectura mantenible
-- integración IA útil
-- base preparada para crecimiento
+1. Conectar el repositorio desde el panel de Hostinger
+2. Configurar las variables de entorno en el panel
+3. Asegurarse de que MySQL esté configurado y accesible
+4. Ejecutar las migraciones:
+   ```bash
+   npx prisma migrate deploy
+   ```
+5. Build y arranque:
+   ```bash
+   npm run build
+   npm start
+   ```
+
+> La aplicación escucha en el puerto definido por `PORT` (Hostinger lo inyecta automáticamente).
+
+---
+
+## Variables de entorno
+
+| Variable | Descripción | Requerida |
+|---|---|---|
+| `DATABASE_URL` | Cadena de conexión MySQL | Sí |
+| `AUTH_SECRET` | Secreto para firmar sesiones/JWT | Sí |
+| `ANTHROPIC_API_KEY` | API key de Anthropic (Claude) | Para IA |
+| `NEXT_PUBLIC_APP_URL` | URL pública de la app | Sí |
+| `GOOGLE_CLIENT_ID` | OAuth Google (opcional) | No |
+| `GOOGLE_CLIENT_SECRET` | OAuth Google (opcional) | No |
+| `EMAIL_SERVER_*` | Config SMTP para emails | Para notifs |
+
+---
+
+## Estado del proyecto
+
+Este proyecto está siendo reconstruido desde una versión inicial basada en Google Apps Script + HTML manual + Google Sheets.
+
+**Fase actual:** Base técnica — estructura, configuración y dependencias.
+
+**Próximas fases:**
+1. Schema de base de datos (modelos Prisma)
+2. Autenticación (email/password)
+3. Módulo de clientes
+4. Módulo de tareas
+5. Dashboard operativo
+6. Vistas (lista, kanban, gantt)
+7. Planificación mensual
+8. Asistente IA
+9. Notificaciones y recordatorios
+
+---
+
+## Principios del proyecto
+
+- Persistencia real de datos
+- Claridad visual y rapidez operativa
+- Arquitectura modular y mantenible
+- Integración IA útil (no decorativa)
+- Base preparada para crecer

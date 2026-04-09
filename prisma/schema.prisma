@@ -1,0 +1,19 @@
+// Ligrow Tasks – Prisma Schema
+// Models will be added progressively in each feature phase.
+//
+// Phase plan:
+//   1. auth    → User, Session
+//   2. clients → Client
+//   3. tasks   → Task, Comment, Attachment
+//   4. months  → Month, Template
+//   5. ai      → AiLog
+//   6. notifs  → Notification
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
